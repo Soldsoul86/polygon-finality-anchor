@@ -1,0 +1,17 @@
+{
+  "name": "polygon-finality-anchor",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "ethers": "^5.8.0",
+    "hardhat": "^2.22.1"
+  }
+}

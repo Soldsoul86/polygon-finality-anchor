@@ -1,117 +1,171 @@
-# Polygon Finality Timestamp Anchor
+# Polygon Finality Anchor
 
 A minimal, immutable on-chain infrastructure primitive deployed on Polygon
 that enables irreversible, value-backed timestamp anchoring.
 
-This project is designed as a low-level building block for Polygon-native
-finality, proof-of-existence, and cross-system verification use cases.
+This repository implements a deliberately small smart contract designed to act as
+a foundational finality primitive for Polygon-native systems.
 
 ---
 
-## Problem Statement
+## Motivation
 
-Many applications require a cryptographically verifiable way to prove
-that some data or intent existed at or before a specific point in time,
-without relying on mutable off-chain systems or upgradeable contracts.
+Many applications require a cryptographically verifiable way to prove that
+some data, intent, or commitment existed at or before a specific point in time.
 
-Existing solutions often introduce:
+Existing approaches often introduce one or more of the following risks:
+
 - Administrative control
-- Upgradeability risk
-- Withdrawable value
+- Upgradeability
+- Withdrawable or recoverable value
 - Excess protocol surface area
 
-This primitive intentionally avoids all of the above.
+These properties weaken long-term finality guarantees.
 
 ---
 
-## Solution Overview
+## Design Goals
 
-`FinalityAnchor` is a minimal smart contract that:
+FinalityAnchor is designed around strict principles:
 
-- Accepts native POL
-- Emits a block-anchored timestamp via an event
-- Has no storage, no owner, no admin, and no upgrade path
-- Provides no withdrawal or mutation mechanism
+- Immutability by construction
+- No upgrade path
+- No ownership or admin privileges
+- No storage
+- No withdrawal mechanism
 
-Once an anchor is emitted, it is final by construction.
-
-This design aligns with Polygon’s emphasis on security, determinism,
-and composable infrastructure.
+Once deployed, the contract’s behavior cannot change and its guarantees do not
+depend on any external actor.
 
 ---
 
-## Invariants
+## How It Works
+
+The contract allows anyone to:
+
+1. Send native POL to the contract
+2. Optionally attach a bytes32 commitment
+3. Emit an on-chain event containing:
+   - Sender address
+   - Value committed
+   - Block number
+   - Block timestamp
+   - Commitment hash (if provided)
+
+There is no code path for funds to exit the contract.
+
+Every anchor is therefore economically final.
+
+---
+
+## Core Invariants
 
 The following properties always hold:
 
 - Native POL can enter the contract
-- No code path exists for POL to exit
-- Anchored events cannot be modified or invalidated
-- Deployer has no post-deployment privileges
+- No function exists for POL to exit
+- Anchored events cannot be altered or invalidated
+- The deployer has no post-deployment privileges
 
-The contract’s correctness is structural, not dependent on external actors.
+Correctness is structural, not governance-dependent.
 
 ---
 
 ## Deployed Instance (Polygon Amoy Testnet)
 
-- **Contract address**  
-  `0x6CbAfC19Ffb8E8457d62BB2E9bC5E4809cc1bCDf`
+- Network: Polygon Amoy Testnet
+- Contract: FinalityAnchor
+- Contract Address: 0x6CbAfC19Ffb8E8457d62BB2E9bC5E4809cc1bCDf
+- Explorer: https://amoy.polygonscan.com/address/0x6CbAfC19Ffb8E8457d62BB2E9bC5E4809cc1bCDf
 
-- **Anchor transaction**  
-  `0xea1a19da5f5c436b20d3e15d29fe65094703f395044e256c57b560b6f2795e52`
+Polygon’s low-cost and fast finality make it well-suited for frequent,
+irreversible anchoring without economic friction.
 
-- **Block number**  
-  `30717210`
-
-The transaction successfully transferred native POL to the contract
-and emitted the `Anchored` event.
 
 ---
 
-## Verification Process
+## On-chain Commitments (Proof of Liveness)
 
-Any third party can independently verify:
+The following irreversible commitments were executed on Polygon Amoy,
+demonstrating repeated liveness and correct behavior of the primitive.
 
-1. The deployed bytecode matches `contracts/FinalityAnchor.sol`
-2. Native POL was transferred to the contract
-3. The `Anchored` event was emitted with sender, value, block number,
-   block timestamp, and commitment hash
-4. No withdrawal, admin, or upgrade mechanism exists
+- Commitment #1 — Value-only anchor  
+  https://amoy.polygonscan.com/tx/0xea1a19da5f5c436b20d3e15d29fe65094703f395044e256c57b560b6f2795e52
 
-No trust in the author is required.
+- Commitment #2 — Value-only anchor  
+  https://amoy.polygonscan.com/tx/0xb8adc4b16920dabae8f91156bcbc8da5e77ce651627ba283082e9e500af14fc4
+
+- Commitment #3 — Metadata-based anchor  
+  Off-chain message: polygon-anchor-metadata-commitment-1  
+  On-chain hash: 0x12344614118f7e766a332658edc7315687932439e4a4fff1f442a84d0f98288b  
+  Transaction: https://amoy.polygonscan.com/tx/0x2e9a6046a384f78c3589f6d20eefaf2cb9bbfeef193e9136c49a23b058c071f2
+
+Each transaction permanently locks POL and emits an Anchored event that can be
+independently verified via Polygonscan.
 
 ---
 
-## Relevance to Polygon Ecosystem
+## Example Use Cases
 
-This primitive can serve as a composable base layer for:
+This primitive is intentionally unopinionated.
+Possible constructions include:
 
 - Proof-of-existence systems
-- Finality and timestamp anchoring
-- Cross-chain or off-chain verification bridges
-- Governance, compliance, or audit trails
-- Research into irreversible on-chain commitments
+- Credible commitments and pledges
+- Time-based guarantees (via wrapper contracts)
+- Cross-system verification anchors
+- Governance or DAO promises
+- Social or economic signaling
 
-The contract itself is intentionally narrow in scope to maximize safety
-and reuse.
+FinalityAnchor does not implement these directly — it enables them.
 
 ---
 
-## Scope and Non-Goals
+## Why Polygon
 
-This project explicitly does not include:
+Polygon provides an ideal execution environment for this primitive due to:
 
-- Tokens or token economics
-- Governance mechanisms
-- Upgradeable proxies
-- User-facing applications
+- Low transaction costs for frequent anchoring
+- Fast and deterministic finality
+- Mature EVM tooling and developer ecosystem
+- Strong focus on infrastructure-level primitives
 
-It is an infrastructure primitive, not a product.
+The contract is chain-agnostic by design, with Polygon as a first-class deployment.
+
+---
+
+## Repository Structure
+
+contracts/
+  FinalityAnchor.sol
+scripts/
+README.md
+
+---
+
+## Development Status
+
+- Contract deployed on Polygon Amoy
+- Multiple irreversible commitments executed
+- Metadata-based semantic anchoring demonstrated
+- Optional mainnet deployment planned
+- Reference integrations and indexing examples planned
 
 ---
 
 ## License
 
 MIT
+
+---
+
+## Reviewer Note
+
+This repository represents a base-layer infrastructure primitive, not an
+end-user application.
+
+Its value emerges from composability and reuse across Polygon-native systems.
+
+---
+
 
